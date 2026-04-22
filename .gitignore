@@ -1,0 +1,24 @@
+# Dataset archives and extracted data
+data/
+*.tar.gz
+*.zip
+*.pt
+*.pth
+*.ckpt
+*.pkl
+*.npy
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Mac files
+.DS_Store
+
+# Virtual environments
+venv/
+.venv/
+env/
