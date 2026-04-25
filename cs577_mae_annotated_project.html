@@ -9372,50 +9372,26 @@ but the direction is the same: shorter encoder sequence = faster model.
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <hr/>
-<h1 id="Part-4---Limitations-and-Future-Directions">Part 4 - Limitations and Future Directions<a class="anchor-link" href="#Part-4---Limitations-and-Future-Directions">¶</a></h1><p>This part discusses the limitations of the Masked Autoencoder (MAE) framework, focusing on the specific trade-offs between its ability to learn complex non-linear features and its relatively poor performance in linear separability. It addresses the challenges of reconstructing low-level pixel signals compared to the high-density semantic tokens used in language modeling , as well as the substantial computational requirements of its non-saturating training schedules. Finally, it highlights the potential for extending this "mask-and-reconstruct" paradigm to capture temporal and structural dependencies in modalities such as video, audio, and 3D point clouds.</p>
-<h2 id="4.1-Core-Architectural-Limitations">4.1 Core Architectural Limitations<a class="anchor-link" href="#4.1-Core-Architectural-Limitations">¶</a></h2><p>The paper and subsequent research identify three primary areas where MAE exhibits significant weaknesses compared to alternative paradigms like contrastive learning or token-based prediction.</p>
-<h3 id="Linear-Probing-Weakness">Linear Probing Weakness<a class="anchor-link" href="#Linear-Probing-Weakness">¶</a></h3><p>One of the most notable findings in the paper is that MAE representations are <strong>less linearly separable</strong> than those produced by contrastive methods like MoCo v3 or DINO.</p>
+<h1 id="Part-4---Limitations-and-Future-Directions">Part 4 - Limitations and Future Directions<a class="anchor-link" href="#Part-4---Limitations-and-Future-Directions">¶</a></h1><p>This part discusses the limitations of the Masked Autoencoder (MAE) framework, focusing on the trade-offs between its ability to learn complex non-linear features and its performance in linear separability. It addresses the challenges of reconstructing low-level pixel signals compared to high-density semantic tokens used in language modeling, as well as the intensive computational requirements of its non-saturating training schedules. Finally, it highlights the potential for extending this "mask-and-reconstruct" paradigm to capture temporal and structural dependencies in broader modalities such as video, audio, and 3D point clouds.</p>
+<h2 id="4.1-Core-Architectural-Limitations">4.1 Core Architectural Limitations<a class="anchor-link" href="#4.1-Core-Architectural-Limitations">¶</a></h2><p>The research identifies several distinct bottlenecks where MAE behaves differently than contrastive learning or token-based prediction paradigms.</p>
+<h3 id="Linear-Probing-Weakness">Linear Probing Weakness<a class="anchor-link" href="#Linear-Probing-Weakness">¶</a></h3><p>One of the most notable findings is that MAE representations are less linearly separable than those produced by contrastive methods like MoCo v3.</p>
 <ul>
-<li><strong>The "Non-linear" Gap:</strong> In linear probing (freezing the encoder and training only a linear head), MAE achieves <strong>73.5%</strong> accuracy on ImageNet-1K, significantly trailing MoCo v3.</li>
-<li><strong>Semantic Depth:</strong> This suggest that while MAE learns powerful features, they are not stored in a "linear" format ready for simple classification. The paper argues that linear separability is not the sole metric for quality, as MAE excels in <strong>full fine-tuning</strong> or <strong>partial fine-tuning</strong> where a few non-linear layers are updated.</li>
+<li>While MAE achieves state-of-the-art results with full fine-tuning, its linear probing accuracy on ImageNet-1K is 73.5%[1, sec. 4].</li>
+<li>This suggests that while MAE learns powerful features, they are not stored in a format ready for simple linear classification[[1, sec. 4]].</li>
+<li>The authors show that tuning just one Transformer block increases performance to 81.0%, proving that MAE learns strong non-linear features that require slightly more complex heads to utilize[1, sec. 4].</li>
 </ul>
-<h3 id="Semantic-Shallowness-of-Pixel-Reconstruction">Semantic Shallowness of Pixel Reconstruction<a class="anchor-link" href="#Semantic-Shallowness-of-Pixel-Reconstruction">¶</a></h3><p>Unlike NLP models like BERT that predict discrete, semantically rich words, MAE reconstructs <strong>raw pixels</strong>, which are low-level signals.</p>
+<h3 id="Semantic-Shallowness-of-Pixel-Reconstruction">Semantic Shallowness of Pixel Reconstruction<a class="anchor-link" href="#Semantic-Shallowness-of-Pixel-Reconstruction">¶</a></h3><p>The nature of the reconstruction target significantly impacts the semantic depth of the learned latent representations.</p>
 <ul>
-<li><strong>Reconstruction vs. Recognition:</strong> The decoder must perform pixel regression, a task of a "lower semantic level" than recognition. To compensate, MAE requires a <strong>reasonably deep decoder</strong> to handle the specialized reconstruction task so the encoder can focus on abstract representation.</li>
-<li><strong>External Critique:</strong> Recent research (e.g., <em>Pixio</em>) suggests that standard MAE decoders may still lack the capacity for high-fidelity pixel regression in large-data regimes, forcing the encoder to "sacrifice" semantic quality to assist in reconstruction.</li>
+<li>Unlike BERT, which predicts semantically dense words, MAE reconstructs raw pixels[1, sec. 1].</li>
+<li>As noted in the Introduction, images possess heavy spatial redundancy, allowing models to recover missing patches from neighbors without deep understanding[1, sec. 1].</li>
+<li>The Discussion concludes that pixels are mere recorded light rather than semantic entities, making pixel regression a lower-level task than recognition[1, sec. 6].</li>
+<li>This characteristic necessitated a lightweight but deep decoder to bridge the gap between low-level reconstruction and high-level abstraction[1, sec. 4,6].</li>
 </ul>
-<h3 id="Intensive-Training-Requirements">Intensive Training Requirements<a class="anchor-link" href="#Intensive-Training-Requirements">¶</a></h3><p>MAE exhibits a unique scaling behavior: accuracy improves steadily with longer training, showing no saturation even at <strong>1600 epochs</strong>.</p>
+<h3 id="Intensive-Training-Requirements">Intensive Training Requirements<a class="anchor-link" href="#Intensive-Training-Requirements">¶</a></h3><p>MAE exhibits a unique scaling behavior that demands massive training schedules to achieve peak performance.</p>
 <ul>
-<li><strong>Comparison to Contrastive Methods:</strong> Contrastive methods like MoCo v3 often saturate by <strong>300 epochs</strong>.</li>
-<li><strong>Computational Overhead:</strong> Although MAE is <strong>3x-4x faster per epoch</strong> due to sparse processing, the need for a massive number of epochs means the total wall-clock time for peak performance remains high.</li>
+<li>Accuracy improves steadily up to 1600 epochs, whereas contrastive methods like MoCo v3 often saturate by 300 epochs[1, sec. 4].</li>
+<li>While the asymmetric design speeds up training by 3x-4x per epoch in Section 3, the total wall-clock time remains significant due to the non-saturating nature of the pretext task[1, sec. 4].</li>
 </ul>
-<h2 id="4.2-Comparison-with-Contrastive-Learning">4.2 Comparison with Contrastive Learning<a class="anchor-link" href="#4.2-Comparison-with-Contrastive-Learning">¶</a></h2><p>External research has highlighted a "semantic density" gap between Masked Image Modeling (MIM) and Contrastive Learning (CL).</p>
-<table>
-<thead>
-<tr>
-<th style="text-align:left">Feature</th>
-<th style="text-align:left">Masked Autoencoder (MAE)</th>
-<th style="text-align:left">Contrastive Learning (DINO/MoCo)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left"><strong>Primary Strength</strong></td>
-<td style="text-align:left">Strong non-linear features; scales to massive models.</td>
-<td style="text-align:left">Highly semantically dense; excellent linear probing.</td>
-</tr>
-<tr>
-<td style="text-align:left"><strong>Data Augmentation</strong></td>
-<td style="text-align:left">Minimal needs; relies on random masking.</td>
-<td style="text-align:left">Heavily dependent on complex augmentations.</td>
-</tr>
-<tr>
-<td style="text-align:left"><strong>Attention Patterns</strong></td>
-<td style="text-align:left">Exhibits <strong>richer attention diversity</strong> across patches.</td>
-<td style="text-align:left">Tends to focus narrowly on dominant objects.</td>
-</tr>
-</tbody>
-</table>
 <h2 id="4.3-Future-Directions:-Multi-modal-Scaling">4.3 Future Directions: Multi-modal Scaling<a class="anchor-link" href="#4.3-Future-Directions:-Multi-modal-Scaling">¶</a></h2><p>The simplicity of the MAE "mask-and-reconstruct" logic has allowed researchers to extend the paradigm into various other data modalities.</p>
 <h3 id="Video-(VideoMAE)">Video (VideoMAE)<a class="anchor-link" href="#Video-(VideoMAE)">¶</a></h3><p>The spatial redundancy in images is even more pronounced in video (temporal redundancy). VideoMAE [10] extends the framework by masking up to <strong>90% or more</strong> of video tubes to force the model to learn motion and temporal dynamics.</p>
 <h3 id="Audio-(AudioMAE)">Audio (AudioMAE)<a class="anchor-link" href="#Audio-(AudioMAE)">¶</a></h3><p>In audio processing, spectrograms can be treated as 2D images. AudioMAE [11] masks patches of the spectrogram, allowing the model to learn representations for sound classification and speech recognition without human-labeled data.</p>
@@ -9424,6 +9400,8 @@ but the direction is the same: shorter encoder sequence = faster model.
 <li><strong>Point-MAE:</strong> Directly reconstructs masked 3D coordinates in point clouds.</li>
 <li><strong>Joint-MAE:</strong> A multi-modal framework that cross-references 2D depth maps and 3D point clouds to ensure geometric and semantic consistency.</li>
 </ul>
+<h2 id="Conclusion">Conclusion<a class="anchor-link" href="#Conclusion">¶</a></h2><p>Masked Autoencoders represent a fundamental shift toward simple, scalable self-supervised learners in computer vision, mirroring the success of BERT in NLP. While the framework requires intensive training and produces representations that are less linearly separable than contrastive alternatives, its ability to scale to massive Vision Transformers and generalize to non-image modalities establishes it as a cornerstone for future generative AI research.</p>
+<hr/>
 <h2 id="References">References<a class="anchor-link" href="#References">¶</a></h2><p>The numbered citations used throughout this notebook refer to the entries below.</p>
 <p><strong>[1]</strong> He, K., Chen, X., Xie, S., Li, Y., Dollár, P., and Girshick, R. (2022). <em>Masked Autoencoders Are Scalable Vision Learners.</em> Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), pp. 16000–16009. The primary paper being annotated.</p>
 <p><strong>[2]</strong> Dosovitskiy, A., Beyer, L., Kolesnikov, A., Weissenborn, D., Zhai, X., Unterthiner, T., Dehghani, M., Minderer, M., Heigold, G., Gelly, S., Uszkoreit, J., and Houlsby, N. (2021). <em>An Image is Worth 16×16 Words: Transformers for Image Recognition at Scale.</em> International Conference on Learning Representations (ICLR). The Vision Transformer that MAE's encoder is based on.</p>
