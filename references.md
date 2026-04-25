@@ -55,6 +55,19 @@ BibTeX:
 
 *Role in our annotation:* the classical denoising autoencoder framework. The MAE paper places itself explicitly in this lineage, so we cite it when discussing how MAE generalizes denoising autoencoders (see [1, Sec. 2, "Autoencoding"]).
 
+[10] Tong, Z., et al. (2022). VideoMAE: Masked Autoencoders are Data-Efficient Learners for Self-Supervised Video Pre-Training. NeurIPS.
+*Role: future work on video
+
+[11] Huang, P. D., et al. (2022). Masked Autoencoders that Listen. NeurIPS.
+*Role: future work on audio
+
+[12] Pang, Y., et al. (2022). Masked Autoencoders for Point Cloud Self-supervised Learning. Proceedings of the European Conference on Computer Vision (ECCV).
+*Role: future work on 3d point clouds
+
+[13] Guo, Z., Li, X., & Heng, P. A. (2023). Joint-MAE: 2D-3D Joint Masked Autoencoders for 3D Point Cloud Pre-training. Proceedings of the International Joint Conference on Artificial Intelligence (IJCAI).
+*Role: future work on 3d point clouds
+
+
 ---
 
 ## Code reference
