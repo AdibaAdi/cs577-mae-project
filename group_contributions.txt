@@ -1,0 +1,24 @@
+CS 577 Deep Learning - Spring 2026
+Course Project: Annotated Walkthrough of Masked Autoencoders Are Scalable Vision Learners (He et al., CVPR 2022)
+
+Group Member Contributions
+
+Member 1: Model Architecture, Minimal CPU-Ready Working Example, and Final Integration
+
+This member built the miniaturized MAE model from scratch, including the tiny ViT encoder, the lightweight decoder, and the random masking logic using the shuffle and unshuffle trick from the paper. They wrote the part-by-part code for patchification, the transformer block, positional embeddings, and the full MiniMAE class that ties everything together. Every block of code was annotated in the style of "The Annotated Transformer," with prose that explains why each design choice was made and how it maps back to the paper.
+
+For the MWE-CPU section, this member set up the CIFAR-10 training pipeline, ran the small training loop on a laptop CPU, produced the loss curve, and generated the reconstruction visualizations that show masked input, predicted patches, and ground truth side by side. They also reproduced a small masking ratio ablation across 50%, 75%, and 90% to mirror the spirit of Figure 5 in the paper, and ran the timing demo that compares the asymmetric encoder with a symmetric variant to show the speedup from keeping mask tokens out of the encoder.
+
+Finally, this member did the integration pass at the end so that the writing, code, and figures across all sections flow together as one cohesive document.
+
+Member 2: Background and Training Loop
+
+This member wrote Part 1 of the project, which covers the motivation behind MAE and the three core reasons that masked image modeling in vision had lagged behind BERT in NLP. These are the architecture gap that was closed by the Vision Transformer, the difference in information density between text and images, and the different role the decoder plays when the target is pixels instead of words. They also wrote the section that explains why a 75% masking ratio works for images even though BERT only uses 15% for text.
+
+For Part 3, this member explained the full training loop and its sub-parts. This includes the pretraining objective, the MSE loss computed only on masked patches, the choice between raw and per-patch-normalized pixel targets, the AdamW optimizer with decoupled weight decay, the linear warmup followed by cosine decay learning rate schedule, the discussion of weight decay and stochastic depth as regularizers, the role of random masking as a built-in form of regularization, and the surprising finding that MAE needs almost no data augmentation. They also wrote the discussion that connects the masking ratio choice back to the design of the pretext task.
+
+Member 3: Discussion, Diagrams, and Formatting
+
+This member wrote Part 4, the limitations and future directions section. This includes the discussion of why MAE representations are less linearly separable than contrastive methods like MoCo v3, the semantic shallowness that comes from reconstructing raw pixels instead of tokens, and the very long training schedules that MAE needs to reach peak accuracy. They also wrote the future directions sub-section that covers how the mask-and-reconstruct paradigm has been extended to video with VideoMAE, to audio spectrograms with AudioMAE, and to 3D point clouds with Point-MAE and Joint-MAE.
+
+This member also produced all of the figures and diagrams in the document. This includes the side-by-side text-vs-image masking illustration in Part 1, the full pipeline diagram in Section 2.2 that shows the data flow from input image through patches, masking, encoder, decoder, and loss, and all of the smaller plots and visualizations that support the text. They handled the overall PDF formatting, the layout of the code cells and their outputs, and the visual polish of the final document so that it reads cleanly from top to bottom.
