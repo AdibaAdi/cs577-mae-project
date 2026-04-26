@@ -7312,7 +7312,6 @@ a.anchor-link {
                     processEnvironments: true
                 },
                 displayAlign: 'center',
-                messageStyle: 'none',
                 CommonHTML: {
                     linebreaks: {
                     automatic: true
@@ -7537,7 +7536,7 @@ a.anchor-link {
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <hr/>
-<h1 id="Part-1-%E2%80%94-Background">Part 1 — Background<a class="anchor-link" href="#Part-1-%E2%80%94-Background">¶</a></h1><p>Before jumping into the architecture, it helps to understand the problem MAE was designed to solve and why earlier approaches struggled with it. This section is not a history lesson — it is the conceptual ground that makes every later design choice feel inevitable rather than arbitrary.</p>
+<h1 id="Part-1:-Background">Part 1: Background<a class="anchor-link" href="#Part-1:-Background">¶</a></h1><p>Before jumping into the architecture, it helps to understand the problem MAE was designed to solve and why earlier approaches struggled with it. This section is not a history lesson — it is the conceptual ground that makes every later design choice feel inevitable rather than arbitrary.</p>
 </div>
 </div>
 </div>
@@ -7562,9 +7561,9 @@ a.anchor-link {
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h2 id="1.2-Why-Masking-Images-Is-Not-Like-Masking-Text">1.2 Why Masking Images Is Not Like Masking Text<a class="anchor-link" href="#1.2-Why-Masking-Images-Is-Not-Like-Masking-Text">¶</a></h2><p>The paper identifies three reasons the vision version of the idea had been underwhelming. They are worth stating carefully because each one leads directly to a design choice later in the paper [1, Sec. 1].</p>
-<p><strong>1. Architectures used to be mismatched.</strong> For most of deep learning's history, vision was dominated by convolutional networks, which operate on grids of pixels. Masking doesn't fit naturally into that grid view — there's no clean way to say "this patch is hidden, and here's a learnable token that means <em>hidden</em>." Transformers treat images as sequences of patches [2], which makes masking straightforward. The architectural obstacle that held vision back is gone.</p>
-<p><strong>2. Images are locally redundant in a way that sentences are not.</strong> If you remove the word <em>photosynthesis</em> from a sentence about biology, you cannot recover it by looking at the surrounding words; you need real understanding of the topic. If you remove a small square of blue sky from a photograph, you can almost always fill it in by copying from an adjacent square. This means a <em>low</em> masking ratio — the 15% that BERT uses for text — is far too gentle for images. The task becomes trivially solvable by local interpolation, and the model never learns anything interesting. MAE's response is to crank the masking ratio up to 75% or more so that local copying is no longer enough.</p>
-<p><strong>3. The decoder has a different job.</strong> In BERT, the decoder predicts words, which are already high-level semantic objects. A one-layer MLP is enough. In MAE, the decoder predicts pixels, which are low-level. The design of the decoder therefore matters a lot: make it too thin and the encoder is forced to specialize in pixel-level detail; make it appropriately expressive and the encoder is free to learn more abstract features. This asymmetry — a heavy encoder that learns representations and a light decoder that handles pixel reconstruction — is core to MAE.</p>
+<p><strong>1. Architectures used to be mismatched.</strong> For most of deep learning's history, vision was dominated by convolutional networks, which operate on grids of pixels. Masking doesn't fit naturally into that grid view, there's no clean way to say "this patch is hidden, and here's a learnable token that means <em>hidden</em>." Transformers treat images as sequences of patches [2], which makes masking straightforward. The architectural obstacle that held vision back is gone.</p>
+<p><strong>2. Images are locally redundant in a way that sentences are not.</strong> If you remove the word <em>photosynthesis</em> from a sentence about biology, you cannot recover it by looking at the surrounding words; you need real understanding of the topic. If you remove a small square of blue sky from a photograph, you can almost always fill it in by copying from an adjacent square. This means a <em>low</em> masking ratio, the 15% that BERT uses for text is far too gentle for images. The task becomes trivially solvable by local interpolation, and the model never learns anything interesting. MAE's response is to crank the masking ratio up to 75% or more so that local copying is no longer enough.</p>
+<p><strong>3. The decoder has a different job.</strong> In BERT, the decoder predicts words, which are already high-level semantic objects. A one-layer MLP is enough. In MAE, the decoder predicts pixels, which are low-level. The design of the decoder therefore matters a lot: make it too thin and the encoder is forced to specialize in pixel-level detail; make it appropriately expressive and the encoder is free to learn more abstract features. This asymmetry, a heavy encoder that learns representations and a light decoder that handles pixel reconstruction, is core to MAE.</p>
 <p>Each of these three observations becomes a concrete design decision. The rest of the paper is essentially a demonstration that once you address them simultaneously, masked image modeling becomes scalable and effective.</p>
 </div>
 </div>
@@ -7578,7 +7577,7 @@ a.anchor-link {
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h2 id="1.3-The-Key-Ideas-That-Make-MAE-Work">1.3 The Key Ideas That Make MAE Work<a class="anchor-link" href="#1.3-The-Key-Ideas-That-Make-MAE-Work">¶</a></h2><p>Against that backdrop, MAE's design can be summarized in two sentences:</p>
 <ol>
-<li><strong>Mask a lot of the image</strong> — about 75% of patches — so that reconstruction demands real reasoning, not local copying.</li>
+<li><strong>Mask a lot of the image</strong> — about 75% of patches so that reconstruction demands real reasoning, not local copying.</li>
 <li><strong>Use an asymmetric encoder-decoder</strong>, where the encoder only sees visible patches and a lightweight decoder handles the rest.</li>
 </ol>
 <p>Everything else in the paper follows from these two choices. The high masking ratio makes the task meaningful; the asymmetric design makes the high masking ratio computationally cheap; together they let the authors train very large models on unlabeled images without drowning in compute [1, Sec. 1, Sec. 3].</p>
@@ -7617,9 +7616,9 @@ a.anchor-link {
 <span class="c1"># The point of this cell is not to be pretty, but to make the</span>
 <span class="c1"># asymmetry between text and images feel concrete before we</span>
 <span class="c1"># start writing model code.</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.patches</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpatches</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib.patches</span> <span class="k">as</span> <span class="nn">mpatches</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mf">3.2</span><span class="p">))</span>
 
@@ -7701,9 +7700,9 @@ a.anchor-link {
 <ul>
 <li><strong>No labels needed during pre-training.</strong> Unlabeled images are effectively free at internet scale.</li>
 <li><strong>The encoder becomes a reusable general-purpose feature extractor.</strong> Once pre-trained, it transfers to classification, object detection, and segmentation, often beating supervised pre-training [1, Sec. 5].</li>
-<li><strong>Bigger models keep getting better.</strong> MAE's gains grow with model capacity — ViT-Huge reaches 87.8% on ImageNet-1K using only ImageNet-1K data [1, Sec. 4.2], outperforming methods that used far more data.</li>
+<li><strong>Bigger models keep getting better.</strong> MAE's gains grow with model capacity, ViT-Huge reaches 87.8% on ImageNet-1K using only ImageNet-1K data [1, Sec. 4.2], outperforming methods that used far more data.</li>
 </ul>
-<p>Self-supervised learning in vision was crowded, complicated, and dominated by contrastive methods before this paper. MAE argued — and demonstrated — that a plain autoencoder, done carefully, is both simpler and more scalable. That is an unusually clean result in an area that tends to accumulate tricks.</p>
+<p>Self-supervised learning in vision was crowded, complicated, and dominated by contrastive methods before this paper. MAE argued and demonstrated that a plain autoencoder, done carefully, is both simpler and more scalable. That is an unusually clean result in an area that tends to accumulate tricks.</p>
 <p>With the motivation in place, the rest of the notebook turns to the how. Part 2 opens the architecture up piece by piece, and Part 3 walks through the training loop.</p>
 </div>
 </div>
@@ -7716,7 +7715,7 @@ a.anchor-link {
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <hr/>
-<h1 id="Part-2-%E2%80%94-Model-Architecture">Part 2 — Model Architecture<a class="anchor-link" href="#Part-2-%E2%80%94-Model-Architecture">¶</a></h1><p>This part opens the model up and explains each component with code. We follow the data flow the figure below: image → patches → masking → encoder → decoder → reconstruction [1, Fig. 1].</p>
+<h1 id="Part-2:-Model-Architecture">Part 2: Model Architecture<a class="anchor-link" href="#Part-2:-Model-Architecture">¶</a></h1><p>This part opens the model up and explains each component with code. We follow the data flow the figure below: image → patches → masking → encoder → decoder → reconstruction [1, Fig. 1].</p>
 <p><img alt="Figure 1" src="assets/Figure1.png"/></p>
 <p>The structure of this section is:</p>
 <ul>
@@ -7754,18 +7753,18 @@ a.anchor-link {
 <span class="c1"># We use PyTorch for the model. Everything else (numpy,</span>
 <span class="c1"># matplotlib) is for visualization and diagnostics. Keeping the</span>
 <span class="c1"># dependency surface small makes the notebook easier to run.</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.patches</span><span class="w"> </span><span class="kn">import</span> <span class="n">FancyBboxPatch</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">matplotlib.patches</span> <span class="kn">import</span> <span class="n">FancyBboxPatch</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn.functional</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">F</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">Subset</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision</span><span class="w"> </span><span class="kn">import</span> <span class="n">datasets</span><span class="p">,</span> <span class="n">transforms</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">Subset</span>
+<span class="kn">from</span> <span class="nn">torchvision</span> <span class="kn">import</span> <span class="n">datasets</span><span class="p">,</span> <span class="n">transforms</span>
 
 <span class="c1"># ------------------------------------------------------------</span>
 <span class="c1"># Reproducibility</span>
@@ -7810,7 +7809,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="Mini-configuration-hyperparameters">Mini-configuration hyperparameters<a class="anchor-link" href="#Mini-configuration-hyperparameters">¶</a></h3><p>Every number below is deliberately smaller than the paper's counterpart. The goal is not to reproduce ImageNet-level accuracy — it is to fit a faithful copy of the MAE mechanism into a laptop's memory and time budget, so the reader can actually run it and watch the loss go down. Each value is annotated with the paper's equivalent so the scale-down is transparent.</p>
+<h3 id="Mini-configuration-hyperparameters">Mini-configuration hyperparameters<a class="anchor-link" href="#Mini-configuration-hyperparameters">¶</a></h3><p>Every number below is deliberately smaller than the paper's counterpart. The goal is not to reproduce ImageNet-level accuracy it is to fit a faithful copy of the MAE mechanism into a laptop's memory and time budget, so the reader can actually run it and watch the loss go down. Each value is annotated with the paper's equivalent so the scale-down is transparent.</p>
 </div>
 </div>
 </div>
@@ -7898,9 +7897,9 @@ Visible patches after masking (75%): 16
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="2.2-Architecture-Diagram-%E2%80%94-The-Whole-Pipeline-in-One-Picture">2.2 Architecture Diagram — The Whole Pipeline in One Picture<a class="anchor-link" href="#2.2-Architecture-Diagram-%E2%80%94-The-Whole-Pipeline-in-One-Picture">¶</a></h2><p>Before we start building, here is the whole data flow in one figure. Each box is a stage, each arrow is labeled with the tensor shape that flows across it, and the colors group the stages by role (input handling in blue, masking in orange, encoder in green, decoder in pink, loss in purple).</p>
+<h2 id="2.2-Architecture-Diagram:-The-Whole-Pipeline-in-One-Picture">2.2 Architecture Diagram: The Whole Pipeline in One Picture<a class="anchor-link" href="#2.2-Architecture-Diagram:-The-Whole-Pipeline-in-One-Picture">¶</a></h2><p>Before we start building, here is the whole data flow in one figure. Each box is a stage, each arrow is labeled with the tensor shape that flows across it, and the colors group the stages by role (input handling in blue, masking in orange, encoder in green, decoder in pink, loss in purple).</p>
 <p><img alt="Architecture Diagram" src="assets/architecture.png"/></p>
-<p>Read this once before the part-by-part analysis below — it will make the individual pieces much easier to place. We will return to this diagram in the synthesis section (2.9) after every component has been implemented.
+<p>Read this once before the part-by-part analysis below, it will make the individual pieces much easier to place. We will return to this diagram in the synthesis section (2.9) after every component has been implemented.
 With the road map in hand, we now walk down it. The next subsections implement each component in isolation and explain what it does and why it is shaped the way it is.</p>
 </div>
 </div>
@@ -7912,13 +7911,13 @@ With the road map in hand, we now walk down it. The next subsections implement e
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="2.3-Patchification-%E2%80%94-From-an-Image-to-a-Sequence-of-Patches">2.3 Patchification — From an Image to a Sequence of Patches<a class="anchor-link" href="#2.3-Patchification-%E2%80%94-From-an-Image-to-a-Sequence-of-Patches">¶</a></h2><p>MAE inherits its basic input representation from the Vision Transformer [2]: an image is cut into non-overlapping square patches, and each patch is flattened into a vector. That sequence of vectors is the input the rest of the model sees.</p>
+<h2 id="2.3-Patchification:-From-an-Image-to-a-Sequence-of-Patches">2.3 Patchification: From an Image to a Sequence of Patches<a class="anchor-link" href="#2.3-Patchification:-From-an-Image-to-a-Sequence-of-Patches">¶</a></h2><p>MAE inherits its basic input representation from the Vision Transformer [2]: an image is cut into non-overlapping square patches, and each patch is flattened into a vector. That sequence of vectors is the input the rest of the model sees.</p>
 <p>Two helpers make this operation explicit and reversible:</p>
 <ul>
 <li><code>patchify</code> reshapes <code>[B, C, H, W]</code> into <code>[B, N, patch_dim]</code>, where <code>N</code> is the number of patches per image.</li>
 <li><code>unpatchify</code> does the inverse, so we can turn predicted patches back into an image for visualization.</li>
 </ul>
-<p>Masking in MAE happens at the patch level, not the pixel level — once we have this representation, the rest of the model works on sequences of tokens just like a language model would [1, Sec. 3].</p>
+<p>Masking in MAE happens at the patch level, not the pixel level, once we have this representation, the rest of the model works on sequences of tokens just like a language model would [1, Sec. 3].</p>
 </div>
 </div>
 </div>
@@ -7927,7 +7926,7 @@ With the road map in hand, we now walk down it. The next subsections implement e
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># ------------------------------------------------------------</span>
@@ -7937,7 +7936,7 @@ With the road map in hand, we now walk down it. The next subsections implement e
 <span class="c1"># nn.Unfold. The explicit reshape path is slower but much easier</span>
 <span class="c1"># to read and to compare against the paper's notation.</span>
 
-<span class="k">def</span><span class="w"> </span><span class="nf">patchify</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">patch_size</span><span class="o">=</span><span class="n">PATCH_SIZE</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">patchify</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">patch_size</span><span class="o">=</span><span class="n">PATCH_SIZE</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""[B, C, H, W]  -&gt;  [B, N, patch_dim]"""</span>
     <span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">W</span> <span class="o">=</span> <span class="n">images</span><span class="o">.</span><span class="n">shape</span>
     <span class="k">assert</span> <span class="n">H</span> <span class="o">%</span> <span class="n">patch_size</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">W</span> <span class="o">%</span> <span class="n">patch_size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> \
@@ -7950,7 +7949,7 @@ With the road map in hand, we now walk down it. The next subsections implement e
     <span class="k">return</span> <span class="n">patches</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">unpatchify</span><span class="p">(</span><span class="n">patches</span><span class="p">,</span> <span class="n">patch_size</span><span class="o">=</span><span class="n">PATCH_SIZE</span><span class="p">,</span>
+<span class="k">def</span> <span class="nf">unpatchify</span><span class="p">(</span><span class="n">patches</span><span class="p">,</span> <span class="n">patch_size</span><span class="o">=</span><span class="n">PATCH_SIZE</span><span class="p">,</span>
                <span class="n">image_size</span><span class="o">=</span><span class="n">IMAGE_SIZE</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="n">IN_CHANNELS</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""[B, N, patch_dim]  -&gt;  [B, C, H, W]"""</span>
     <span class="n">B</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="n">patches</span><span class="o">.</span><span class="n">shape</span>
@@ -8007,14 +8006,14 @@ Round-trip reconstruction is exact. ✓
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="2.4-Random-Masking-%E2%80%94-The-Shuffle/Keep/Unshuffle-Trick">2.4 Random Masking — The Shuffle/Keep/Unshuffle Trick<a class="anchor-link" href="#2.4-Random-Masking-%E2%80%94-The-Shuffle/Keep/Unshuffle-Trick">¶</a></h2><p>Now for the operation that makes MAE <em>MAE</em>: we randomly hide most of the patches before the encoder sees them.</p>
-<p>Implementing this naively — say, by multiplying patches by a 0/1 mask — would force the encoder to look at every patch anyway, just with a lot of zeros. That defeats the whole point of the asymmetric design. Instead, the paper uses an elegant index-shuffling trick [1, Sec. 3, "Simple implementation"]:</p>
+<h2 id="2.4-Random-Masking:-The-Shuffle/Keep/Unshuffle-Trick">2.4 Random Masking: The Shuffle/Keep/Unshuffle Trick<a class="anchor-link" href="#2.4-Random-Masking:-The-Shuffle/Keep/Unshuffle-Trick">¶</a></h2><p>Now for the operation that makes MAE <em>MAE</em>: we randomly hide most of the patches before the encoder sees them.</p>
+<p>Implementing this naively say, by multiplying patches by a 0/1 mask would force the encoder to look at every patch anyway, just with a lot of zeros. That defeats the whole point of the asymmetric design. Instead, the paper uses an elegant index-shuffling trick [1, Sec. 3, "Simple implementation"]:</p>
 <ol>
 <li>Draw a random permutation of patch indices for each image in the batch.</li>
-<li>Keep the first <code>len_keep = N · (1 − r)</code> patches — these are the <em>visible</em> ones that go into the encoder.</li>
+<li>Keep the first <code>len_keep = N · (1 − r)</code> patches, these are the <em>visible</em> ones that go into the encoder.</li>
 <li>Remember the inverse permutation so that after the encoder we can drop mask tokens into the correct holes.</li>
 </ol>
-<p>The encoder works on a genuinely shorter sequence — in our case 16 tokens instead of 64 — which is where the real speed and memory gain comes from. No sparse operations are required, and the implementation is a handful of <code>torch.argsort</code> and <code>torch.gather</code> calls.</p>
+<p>The encoder works on a genuinely shorter sequence in our case 16 tokens instead of 64 which is where the real speed and memory gain comes from. No sparse operations are required, and the implementation is a handful of <code>torch.argsort</code> and <code>torch.gather</code> calls.</p>
 </div>
 </div>
 </div>
@@ -8023,7 +8022,7 @@ Round-trip reconstruction is exact. ✓
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># ------------------------------------------------------------</span>
@@ -8034,7 +8033,7 @@ Round-trip reconstruction is exact. ✓
 <span class="c1"># `ids_restore` tensor is the key: it is the recipe for putting the</span>
 <span class="c1"># missing patches back in the right places after encoding.</span>
 
-<span class="k">def</span><span class="w"> </span><span class="nf">random_masking</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mask_ratio</span><span class="o">=</span><span class="n">MASK_RATIO</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">random_masking</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mask_ratio</span><span class="o">=</span><span class="n">MASK_RATIO</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    x: [B, N, D] -- patch embeddings in original spatial order.</span>
 <span class="sd">    returns</span>
@@ -8113,7 +8112,7 @@ Masked fraction (averaged over batch): 0.750  (target: 0.75)
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># ------------------------------------------------------------</span>
@@ -8128,7 +8127,7 @@ Masked fraction (averaged over batch): 0.750  (target: 0.75)
 
 <span class="n">transform</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span><span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">()])</span>
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_make_synthetic_dataset</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">IMAGE_SIZE</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_make_synthetic_dataset</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">IMAGE_SIZE</span><span class="p">):</span>
     <span class="c1"># Generate synthetic images with smooth low-frequency structure</span>
     <span class="c1"># so they have local spatial redundancy similar to real images.</span>
     <span class="c1"># The point is not photorealism -- it is that the MAE pretext</span>
@@ -8146,10 +8145,10 @@ Masked fraction (averaged over batch): 0.750  (target: 0.75)
         <span class="n">b</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">+</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">freqs</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">xx</span> <span class="o">+</span> <span class="n">phases</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">freqs</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">*</span> <span class="n">yy</span> <span class="o">+</span> <span class="n">phases</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
         <span class="n">im</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
         <span class="n">imgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">im</span><span class="p">))</span>
-    <span class="k">class</span><span class="w"> </span><span class="nc">_Synth</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
-        <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
-        <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
-        <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="mi">0</span>
+    <span class="k">class</span> <span class="nc">_Synth</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="mi">0</span>
     <span class="k">return</span> <span class="n">_Synth</span><span class="p">(</span><span class="n">imgs</span><span class="p">)</span>
 
 <span class="k">try</span><span class="p">:</span>
@@ -8190,7 +8189,7 @@ Sample batch shape: (64, 3, 32, 32)
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># ------------------------------------------------------------</span>
@@ -8198,7 +8197,7 @@ Sample batch shape: (64, 3, 32, 32)
 <span class="c1"># actually receives: 16 out of 64 patches, chosen uniformly at random.</span>
 <span class="c1"># ------------------------------------------------------------</span>
 
-<span class="k">def</span><span class="w"> </span><span class="nf">apply_patch_mask_to_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">patch_size</span><span class="o">=</span><span class="n">PATCH_SIZE</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">apply_patch_mask_to_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">patch_size</span><span class="o">=</span><span class="n">PATCH_SIZE</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Paint masked patches gray for display purposes only."""</span>
     <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
     <span class="n">_</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">W</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span>
@@ -8252,7 +8251,7 @@ Sample batch shape: (64, 3, 32, 32)
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>That gray-speckled image is a real depiction of the pre-training task. The encoder is handed only the colored tiles and, via the decoder, has to produce a plausible reconstruction of everything that was hidden. At this masking level "plausible" cannot mean "copied from the neighbors" — most neighbors are missing too. The model has to learn something about the structure of natural images.</p>
+<p>That gray-speckled image is a real depiction of the pre-training task. The encoder is handed only the colored tiles and, via the decoder, has to produce a plausible reconstruction of everything that was hidden. At this masking level "plausible" cannot mean "copied from the neighbors", most neighbors are missing too. The model has to learn something about the structure of natural images.</p>
 </div>
 </div>
 </div>
@@ -8263,8 +8262,8 @@ Sample batch shape: (64, 3, 32, 32)
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="2.5-Transformer-Block-%E2%80%94-The-Shared-Building-Brick">2.5 Transformer Block — The Shared Building Brick<a class="anchor-link" href="#2.5-Transformer-Block-%E2%80%94-The-Shared-Building-Brick">¶</a></h2><p>Both the encoder and the decoder are stacks of identical Transformer blocks [3]. A block has two sub-layers: multi-head self-attention and a two-layer MLP, each wrapped in a LayerNorm and a residual connection.</p>
-<p>We write it once and reuse it in both places. The only difference between encoder and decoder will be the dimensions and the depth — exactly the asymmetric arrangement the paper describes [1, Sec. 3].</p>
+<h2 id="2.5-Transformer-Block:-The-Shared-Building-Brick">2.5 Transformer Block: The Shared Building Brick<a class="anchor-link" href="#2.5-Transformer-Block:-The-Shared-Building-Brick">¶</a></h2><p>Both the encoder and the decoder are stacks of identical Transformer blocks [3]. A block has two sub-layers: multi-head self-attention and a two-layer MLP, each wrapped in a LayerNorm and a residual connection.</p>
+<p>We write it once and reuse it in both places. The only difference between encoder and decoder will be the dimensions and the depth exactly the asymmetric arrangement the paper describes [1, Sec. 3].</p>
 </div>
 </div>
 </div>
@@ -8273,7 +8272,7 @@ Sample batch shape: (64, 3, 32, 32)
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># ------------------------------------------------------------</span>
@@ -8284,8 +8283,8 @@ Sample batch shape: (64, 3, 32, 32)
 <span class="c1"># arrangement used by ViT [2] and MAE, and is more stable than</span>
 <span class="c1"># the original post-norm Transformer in [3] when depth grows.</span>
 
-<span class="k">class</span><span class="w"> </span><span class="nc">TransformerBlock</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">num_heads</span><span class="p">,</span> <span class="n">mlp_ratio</span><span class="o">=</span><span class="mf">4.0</span><span class="p">,</span> <span class="n">dropout</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">TransformerBlock</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">num_heads</span><span class="p">,</span> <span class="n">mlp_ratio</span><span class="o">=</span><span class="mf">4.0</span><span class="p">,</span> <span class="n">dropout</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">norm1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">LayerNorm</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">attn</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">MultiheadAttention</span><span class="p">(</span>
@@ -8300,7 +8299,7 @@ Sample batch shape: (64, 3, 32, 32)
             <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_dim</span><span class="p">,</span> <span class="n">dim</span><span class="p">),</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="c1"># Sub-layer 1: self-attention with a pre-norm + residual.</span>
         <span class="n">x_norm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="n">attn_out</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attn</span><span class="p">(</span><span class="n">x_norm</span><span class="p">,</span> <span class="n">x_norm</span><span class="p">,</span> <span class="n">x_norm</span><span class="p">)</span>
@@ -8351,11 +8350,11 @@ Sample batch shape: (64, 3, 32, 32)
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="2.6-Positional-Embeddings-%E2%80%94-Telling-the-Model-Where-Each-Patch-Lives">2.6 Positional Embeddings — Telling the Model Where Each Patch Lives<a class="anchor-link" href="#2.6-Positional-Embeddings-%E2%80%94-Telling-the-Model-Where-Each-Patch-Lives">¶</a></h2><p>Self-attention is permutation-invariant: it treats the input as an unordered set. Without extra information, the Transformer has no way to know that patch #5 came from the top-left corner and patch #60 came from the bottom. Positional embeddings fix this by adding a learned (or sinusoidal) vector to each token that encodes its spatial location.</p>
+<h2 id="2.6-Positional-Embeddings:-Telling-the-Model-Where-Each-Patch-Lives">2.6 Positional Embeddings: Telling the Model Where Each Patch Lives<a class="anchor-link" href="#2.6-Positional-Embeddings:-Telling-the-Model-Where-Each-Patch-Lives">¶</a></h2><p>Self-attention is permutation-invariant: it treats the input as an unordered set. Without extra information, the Transformer has no way to know that patch #5 came from the top-left corner and patch #60 came from the bottom. Positional embeddings fix this by adding a learned (or sinusoidal) vector to each token that encodes its spatial location.</p>
 <p>MAE uses positional embeddings in two places, and the distinction matters:</p>
 <ul>
 <li><strong>Encoder positional embeddings.</strong> Added to patch embeddings <em>before</em> masking. The encoder only sees visible patches, but it still needs to know where each of those visible patches originally sat in the image.</li>
-<li><strong>Decoder positional embeddings.</strong> Added to the <em>full</em> sequence after mask tokens have been reinserted. This is essential — without it, every mask token would be identical and the decoder would have no way to tell which hole it is trying to fill [1, Sec. 3, "MAE decoder"].</li>
+<li><strong>Decoder positional embeddings.</strong> Added to the <em>full</em> sequence after mask tokens have been reinserted. This is essential, without it, every mask token would be identical and the decoder would have no way to tell which hole it is trying to fill [1, Sec. 3, "MAE decoder"].</li>
 </ul>
 <p>We use learned positional embeddings here for code simplicity. The paper uses fixed 2D sinusoidal embeddings and reports that both work comparably well [1, Sec. 3].</p>
 </div>
@@ -8368,8 +8367,8 @@ Sample batch shape: (64, 3, 32, 32)
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="2.7-Encoder-and-Decoder-Roles">2.7 Encoder and Decoder Roles<a class="anchor-link" href="#2.7-Encoder-and-Decoder-Roles">¶</a></h2><p>With patchification, masking, and the Transformer block in hand, we can now describe the two main pathways. They are deliberately asymmetric — this asymmetry is MAE's most important architectural idea.</p>
-<p><strong>Encoder.</strong> The encoder is heavy (wider, deeper, more parameters), but it operates on a <em>short</em> sequence: only the visible patches. This is the double win of MAE — quality improves because the encoder never sees unnatural mask tokens during pre-training [1, Table 1c], and throughput improves because self-attention is quadratic in sequence length [1, Table 2].</p>
+<h2 id="2.7-Encoder-and-Decoder-Roles">2.7 Encoder and Decoder Roles<a class="anchor-link" href="#2.7-Encoder-and-Decoder-Roles">¶</a></h2><p>With patchification, masking, and the Transformer block in hand, we can now describe the two main pathways. They are deliberately asymmetric, this asymmetry is MAE's most important architectural idea.</p>
+<p><strong>Encoder.</strong> The encoder is heavy (wider, deeper, more parameters), but it operates on a <em>short</em> sequence: only the visible patches. This is the double win of MAE quality improves because the encoder never sees unnatural mask tokens during pre-training [1, Table 1c], and throughput improves because self-attention is quadratic in sequence length [1, Table 2].</p>
 <p><strong>Decoder.</strong> The decoder is light (narrower, shallower, fewer parameters), but it operates on the <em>full</em> sequence: encoded visible tokens interleaved with learned mask tokens at the correct spatial positions. Because the decoder exists only during pre-training and is thrown away before any downstream task, we can afford to give it a less demanding job [1, Sec. 3, "MAE decoder"].</p>
 <p>These two design choices reinforce each other. If we had skipped masking and encoded everything, we would get no efficiency win and the task would become trivial. If we had kept masking but fed mask tokens through the encoder, we would lose both the efficiency win and the representation quality. MAE's asymmetric design is what makes the simultaneous combination pay off.</p>
 <p>The next cell ties everything together into a single <code>MiniMAE</code> module.</p>
@@ -8383,7 +8382,7 @@ Sample batch shape: (64, 3, 32, 32)
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="2.8-Synthesis-%E2%80%94-The-Full-Model-in-One-Class">2.8 Synthesis — The Full Model in One Class<a class="anchor-link" href="#2.8-Synthesis-%E2%80%94-The-Full-Model-in-One-Class">¶</a></h2><p>This is where the individual pieces combine. <code>MiniMAE</code> is deliberately structured so that <code>forward</code> reads like the pipeline diagram from Section 2.2:</p>
+<h2 id="2.8-Synthesis:-The-Full-Model-in-One-Class">2.8 Synthesis: The Full Model in One Class<a class="anchor-link" href="#2.8-Synthesis:-The-Full-Model-in-One-Class">¶</a></h2><p>This is where the individual pieces combine. <code>MiniMAE</code> is deliberately structured so that <code>forward</code> reads like the pipeline diagram from Section 2.2:</p>
 <ol>
 <li><code>forward_encoder</code> — patchify, embed, add positions, mask, run the encoder on visible tokens only.</li>
 <li><code>forward_decoder</code> — project to decoder width, insert mask tokens, unshuffle, add decoder positions, run the decoder, predict pixels.</li>
@@ -8398,7 +8397,7 @@ Sample batch shape: (64, 3, 32, 32)
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [10]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># ------------------------------------------------------------</span>
@@ -8408,8 +8407,8 @@ Sample batch shape: (64, 3, 32, 32)
 <span class="c1"># three colored regions of the pipeline diagram. Each method does</span>
 <span class="c1"># exactly what its name says, no more and no less.</span>
 
-<span class="k">class</span><span class="w"> </span><span class="nc">MiniMAE</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+<span class="k">class</span> <span class="nc">MiniMAE</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">image_size</span><span class="o">=</span><span class="n">IMAGE_SIZE</span><span class="p">,</span>
         <span class="n">patch_size</span><span class="o">=</span><span class="n">PATCH_SIZE</span><span class="p">,</span>
@@ -8479,7 +8478,7 @@ Sample batch shape: (64, 3, 32, 32)
         <span class="bp">self</span><span class="o">.</span><span class="n">decoder_pred</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">decoder_embed_dim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">patch_dim</span><span class="p">)</span>
 
     <span class="c1"># --------------------------------------------------------</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">forward_encoder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">forward_encoder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="p">):</span>
         <span class="c1"># 1. Image → sequence of flattened patches.</span>
         <span class="n">patches</span> <span class="o">=</span> <span class="n">patchify</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">patch_size</span><span class="p">)</span>       <span class="c1"># [B, N, patch_dim]</span>
         <span class="c1"># 2. Token embedding with a learned Linear.</span>
@@ -8495,7 +8494,7 @@ Sample batch shape: (64, 3, 32, 32)
         <span class="n">x_visible</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder_norm</span><span class="p">(</span><span class="n">x_visible</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">x_visible</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">ids_restore</span><span class="p">,</span> <span class="n">patches</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">forward_decoder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_visible</span><span class="p">,</span> <span class="n">ids_restore</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">forward_decoder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_visible</span><span class="p">,</span> <span class="n">ids_restore</span><span class="p">):</span>
         <span class="n">B</span><span class="p">,</span> <span class="n">N_visible</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">x_visible</span><span class="o">.</span><span class="n">shape</span>
         <span class="c1"># 6. Project encoded visible tokens to the decoder's width.</span>
         <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder_embed</span><span class="p">(</span><span class="n">x_visible</span><span class="p">)</span>                 <span class="c1"># [B, N_visible, dec_dim]</span>
@@ -8518,7 +8517,7 @@ Sample batch shape: (64, 3, 32, 32)
         <span class="n">pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder_pred</span><span class="p">(</span><span class="n">x_full</span><span class="p">)</span>                  <span class="c1"># [B, N, patch_dim]</span>
         <span class="k">return</span> <span class="n">pred</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">forward_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_patches</span><span class="p">,</span> <span class="n">pred_patches</span><span class="p">,</span> <span class="n">mask</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">forward_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_patches</span><span class="p">,</span> <span class="n">pred_patches</span><span class="p">,</span> <span class="n">mask</span><span class="p">):</span>
         <span class="c1"># 12a. Optional per-patch target normalization [1, Table 1d]:</span>
         <span class="c1"># z-score each patch (over its pixel dim) before comparing.</span>
         <span class="c1"># This enhances local contrast and improved results in the paper.</span>
@@ -8531,7 +8530,7 @@ Sample batch shape: (64, 3, 32, 32)
         <span class="c1"># 13. Average ONLY over masked patches — the key MAE choice.</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">loss_per_patch</span> <span class="o">*</span> <span class="n">mask</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">mask</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="p">):</span>
         <span class="n">x_visible</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">ids_restore</span><span class="p">,</span> <span class="n">target_patches</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_encoder</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
         <span class="n">pred_patches</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_decoder</span><span class="p">(</span><span class="n">x_visible</span><span class="p">,</span> <span class="n">ids_restore</span><span class="p">)</span>
         <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_loss</span><span class="p">(</span><span class="n">target_patches</span><span class="p">,</span> <span class="n">pred_patches</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>
@@ -8576,7 +8575,7 @@ Sample batch shape: (64, 3, 32, 32)
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [11]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [10]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># ------------------------------------------------------------</span>
@@ -8652,13 +8651,13 @@ decoder_pred (patch pixels)        (8, 64, 48)
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d6d51e40">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=dfb69d79">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>Every shape on this table should line up exactly with the labeled arrow in the pipeline diagram. If they match, it means our <code>MiniMAE</code> implementation is doing what Figure 1 of the paper describes — just with smaller numbers.</p>
+<p>Every shape on this table should line up exactly with the labeled arrow in the pipeline diagram. If they match, it means our <code>MiniMAE</code> implementation is doing what Figure 1 of the paper describes just with smaller numbers.</p>
 <p>With the model completely assembled and shape-traced, we now move to training: how it is supervised, how it is optimized, how it is regularized, and what a few epochs of actual training look like on a laptop.</p>
 </div>
 </div>
@@ -8671,7 +8670,7 @@ decoder_pred (patch pixels)        (8, 64, 48)
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <hr/>
-<h1 id="Part-3-%E2%80%94-Training-and-Minimal-CPU-Ready-Example">Part 3 — Training and Minimal CPU-Ready Example<a class="anchor-link" href="#Part-3-%E2%80%94-Training-and-Minimal-CPU-Ready-Example">¶</a></h1><p>This part explains the training loop of MAE as a set of distinct decisions — objective, loss, optimizer, regularization, schedule, augmentation, masking strategy — in the style of <em>The Annotated Transformer</em>. After the conceptual walkthrough, we run a small training loop on a laptop so you can see each decision take effect.</p>
+<h1 id="Part-3:-Training-and-Minimal-CPU-Ready-Example">Part 3: Training and Minimal CPU-Ready Example<a class="anchor-link" href="#Part-3:-Training-and-Minimal-CPU-Ready-Example">¶</a></h1><p>This part explains the training loop of MAE as a set of distinct decisions - objective, loss, optimizer, regularization, schedule, augmentation, masking strategy in the style of <em>The Annotated Transformer</em>. After the conceptual walkthrough, we run a small training loop on a laptop so you can see each decision take effect.</p>
 <p>The structure is:</p>
 <ul>
 <li><strong>3.1 Objective</strong> — what the model is being asked to predict.</li>
@@ -8696,7 +8695,7 @@ decoder_pred (patch pixels)        (8, 64, 48)
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="3.1-The-Pretraining-Objective">3.1 The Pretraining Objective<a class="anchor-link" href="#3.1-The-Pretraining-Objective">¶</a></h2><p>MAE's objective is <em>masked patch reconstruction</em>. Given an image with most of its patches removed, the model must predict the missing patches in pixel space [1, Sec. 3]. There are no class labels, no contrastive pairs, no momentum encoders — just "here is a damaged image, fill it in."</p>
+<h2 id="3.1-The-Pretraining-Objective">3.1 The Pretraining Objective<a class="anchor-link" href="#3.1-The-Pretraining-Objective">¶</a></h2><p>MAE's objective is <em>masked patch reconstruction</em>. Given an image with most of its patches removed, the model must predict the missing patches in pixel space [1, Sec. 3]. There are no class labels, no contrastive pairs, no momentum encoders just "here is a damaged image, fill it in."</p>
 <p>The reason this works as a representation-learning objective is subtle. A good reconstruction at 75% masking cannot be achieved by local texture copying, because most neighbors are also missing. To fill in a masked patch well, the encoder has to form a surprisingly holistic understanding of what it is looking at: the category of the object, its orientation, the layout of the scene. That understanding is exactly what we want the encoder to learn, and pixel reconstruction turns out to be a decent proxy for it.</p>
 </div>
 </div>
@@ -8708,8 +8707,8 @@ decoder_pred (patch pixels)        (8, 64, 48)
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="3.2-Loss-%E2%80%94-MSE-on-Masked-Patches-Only">3.2 Loss — MSE on Masked Patches Only<a class="anchor-link" href="#3.2-Loss-%E2%80%94-MSE-on-Masked-Patches-Only">¶</a></h2><p>The loss function is pixel-space mean squared error, but with an important twist: it is computed <em>only</em> on masked patches, not on the full image [1, Sec. 3, footnote 1].</p>
-<p>This is a deliberate choice. If we averaged the loss over all patches, the model would be rewarded for reproducing patches it was already given. That is an easy problem — the decoder would learn a clever identity map on visible tokens — and it would dilute the learning signal. By averaging only over masked patches, we force every gradient to be about inference from context, not about reproduction.</p>
+<h2 id="3.2-Loss:-MSE-on-Masked-Patches-Only">3.2 Loss: MSE on Masked Patches Only<a class="anchor-link" href="#3.2-Loss:-MSE-on-Masked-Patches-Only">¶</a></h2><p>The loss function is pixel-space mean squared error, but with an important twist: it is computed <em>only</em> on masked patches, not on the full image [1, Sec. 3, footnote 1].</p>
+<p>This is a deliberate choice. If we averaged the loss over all patches, the model would be rewarded for reproducing patches it was already given. That is an easy problem, the decoder would learn a clever identity map on visible tokens and it would dilute the learning signal. By averaging only over masked patches, we force every gradient to be about inference from context, not about reproduction.</p>
 <p>The paper notes that computing the loss on all pixels instead of only masked pixels slightly degrades accuracy (about 0.5% on ImageNet) [1, Sec. 3, footnote 1]. Small numerical difference, but directionally it confirms the intuition.</p>
 <p>In code, the choice is the two-line <code>forward_loss</code> we already wrote in <code>MiniMAE</code>:</p>
 <div class="highlight"><pre><span></span><span class="n">loss_per_patch</span> <span class="o">=</span> <span class="p">((</span><span class="n">pred</span> <span class="o">-</span> <span class="n">target</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>    <span class="c1"># [B, N]</span>
@@ -8726,7 +8725,7 @@ decoder_pred (patch pixels)        (8, 64, 48)
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="3.3-Reconstruction-Target-%E2%80%94-Raw-vs.-Normalized-Pixels">3.3 Reconstruction Target — Raw vs. Normalized Pixels<a class="anchor-link" href="#3.3-Reconstruction-Target-%E2%80%94-Raw-vs.-Normalized-Pixels">¶</a></h2><p>The default target in MAE is the raw pixel content of each masked patch. The paper also studies a variant where the target is normalized per-patch: subtract the patch's mean, divide by its standard deviation, and regress on the normalized values. Table 1d of the paper reports a small but consistent improvement from this normalized target [1, Table 1d].</p>
+<h2 id="3.3-Reconstruction-Target---Raw-vs.-Normalized-Pixels">3.3 Reconstruction Target - Raw vs. Normalized Pixels<a class="anchor-link" href="#3.3-Reconstruction-Target---Raw-vs.-Normalized-Pixels">¶</a></h2><p>The default target in MAE is the raw pixel content of each masked patch. The paper also studies a variant where the target is normalized per-patch: subtract the patch's mean, divide by its standard deviation, and regress on the normalized values. Table 1d of the paper reports a small but consistent improvement from this normalized target [1, Table 1d].</p>
 <p>The intuition is that per-patch normalization removes global brightness and contrast variations from the regression target, leaving the model to predict <em>structure</em> rather than absolute intensity. That is a slightly more useful signal for downstream recognition.</p>
 <p>The paper also rules out a couple of other target choices:</p>
 <ul>
@@ -8744,13 +8743,8 @@ decoder_pred (patch pixels)        (8, 64, 48)
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="3.4-Optimizer-%E2%80%94-AdamW">3.4 Optimizer — AdamW<a class="anchor-link" href="#3.4-Optimizer-%E2%80%94-AdamW">¶</a></h2><p>The original MAE paper uses AdamW [7], which is the Transformer community's default for good reasons. The "W" stands for <em>decoupled weight decay</em>: weight decay is applied directly to the parameters during the update step, rather than being folded into the gradient as an L2 penalty. For adaptive optimizers like Adam, these two formulations are not equivalent, and the decoupled form is what Loshchilov and Hutter showed actually behaves like classical weight decay [7].</p>
-<p>In our MWE we use plain Adam, because:</p>
-<ul>
-<li>The scale-down is tiny (a 5 000-image subset, five epochs), so regularization choices have only a small effect.</li>
-<li>Plain Adam lets the notebook avoid a whole sub-tangent on decoupled weight decay tuning.</li>
-</ul>
-<p>At ImageNet scale the difference matters a lot more — AdamW consistently generalizes better than Adam for Transformers, which is why the paper uses it.</p>
+<h2 id="3.4-Optimizer:-AdamW">3.4 Optimizer: AdamW<a class="anchor-link" href="#3.4-Optimizer:-AdamW">¶</a></h2><p>The original MAE paper uses AdamW [7], which is the Transformer community's default for good reasons. The "W" stands for <em>decoupled weight decay</em>: weight decay is applied directly to the parameters during the update step, rather than being folded into the gradient as an L2 penalty. For adaptive optimizers like Adam, these two formulations are not equivalent, and the decoupled form is what Loshchilov and Hutter showed actually behaves like classical weight decay [7].</p>
+<p>In our MWE we use AdamW with betas=(0.9, 0.95) and weight_decay=0.05, matching the paper's choices at reduced scale [1, App. A.1]. Even though our scale-down is tiny (a 5,000-image subset, five epochs) and regularization choices have only a small effect at this size, keeping AdamW in the loop means the training code is faithful to the paper rather than diverging on the optimizer choice. At ImageNet scale the difference matters much more, since AdamW consistently generalizes better than plain Adam for Transformers, which is why the paper uses it.</p>
 </div>
 </div>
 </div>
@@ -8761,7 +8755,7 @@ decoder_pred (patch pixels)        (8, 64, 48)
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="3.5-Learning-Rate-Schedule-%E2%80%94-Warmup-and-Cosine-Decay">3.5 Learning Rate Schedule — Warmup and Cosine Decay<a class="anchor-link" href="#3.5-Learning-Rate-Schedule-%E2%80%94-Warmup-and-Cosine-Decay">¶</a></h2><p>The original paper uses a linear <em>warmup</em> for the first few epochs, followed by a <em>cosine decay</em> down toward zero over the remainder of training [1, Appendix]. Warmup prevents the large initial gradients that can destabilize Transformer training, and cosine decay gives a smooth fine-grained final phase.</p>
+<h2 id="3.5-Learning-Rate-Schedule---Warmup-and-Cosine-Decay">3.5 Learning Rate Schedule - Warmup and Cosine Decay<a class="anchor-link" href="#3.5-Learning-Rate-Schedule---Warmup-and-Cosine-Decay">¶</a></h2><p>The original paper uses a linear <em>warmup</em> for the first few epochs, followed by a <em>cosine decay</em> down toward zero over the remainder of training [1, Appendix]. Warmup prevents the large initial gradients that can destabilize Transformer training, and cosine decay gives a smooth fine-grained final phase.</p>
 <p>The schedule matters more than it might seem: Figure 7 of the paper shows that MAE's accuracy keeps improving as pre-training is extended from 100 to 1600 epochs, with linear probing still climbing at the end [1, Fig. 7]. Long schedules plus a good learning rate schedule are part of why MAE scales.</p>
 <p>Our mini run is only five epochs, too short for any schedule to matter in terms of final accuracy, but we still include a one-epoch linear warmup followed by cosine decay to zero, so the training loop demonstrates the full schedule shape rather than skipping it.</p>
 </div>
@@ -8774,13 +8768,13 @@ decoder_pred (patch pixels)        (8, 64, 48)
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="3.6-Regularization-%E2%80%94-Weight-Decay,-Stochastic-Depth,-and-Masking-Itself">3.6 Regularization — Weight Decay, Stochastic Depth, and Masking Itself<a class="anchor-link" href="#3.6-Regularization-%E2%80%94-Weight-Decay,-Stochastic-Depth,-and-Masking-Itself">¶</a></h2><p>Several kinds of regularization show up in full-scale MAE training:</p>
+<h2 id="3.6-Regularization:-Weight-Decay,-Stochastic-Depth,-and-Masking-Itself">3.6 Regularization: Weight Decay, Stochastic Depth, and Masking Itself<a class="anchor-link" href="#3.6-Regularization:-Weight-Decay,-Stochastic-Depth,-and-Masking-Itself">¶</a></h2><p>Several kinds of regularization show up in full-scale MAE training:</p>
 <ul>
 <li><strong>Weight decay</strong> (through AdamW), around 0.05 for the pre-training phase, which gently shrinks weights toward zero and discourages overfit.</li>
 <li><strong>Stochastic depth</strong> (DropPath) [30], which randomly drops residual branches during training to improve generalization, especially for the very deep encoders used in ViT-Large and ViT-Huge.</li>
 <li><strong>Random masking itself.</strong> This is the regularizer that does the most work in MAE, and it is free: because the mask changes every step, the model never sees the exact same input twice, even if the underlying image is repeated [1, Sec. 4.1].</li>
 </ul>
-<p>The last point is what makes MAE so different from contrastive methods. Contrastive learning relies on heavy data augmentation to create informative positive/negative pairs; if you remove augmentation, the positive pair becomes trivially solvable and the whole objective collapses. MAE's random mask does the equivalent job for free — it guarantees every iteration sees a different version of each image, which is why the next section shows that MAE barely needs data augmentation at all.</p>
+<p>The last point is what makes MAE so different from contrastive methods. Contrastive learning relies on heavy data augmentation to create informative positive/negative pairs; if you remove augmentation, the positive pair becomes trivially solvable and the whole objective collapses. MAE's random mask does the equivalent job for free, it guarantees every iteration sees a different version of each image, which is why the next section shows that MAE barely needs data augmentation at all.</p>
 <p>In the MWE we include AdamW weight decay (0.05) to match the paper; we skip stochastic depth because at two encoder blocks it has nothing meaningful to regularize..</p>
 </div>
 </div>
@@ -8792,15 +8786,15 @@ decoder_pred (patch pixels)        (8, 64, 48)
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="3.7-Data-Augmentation-%E2%80%94-Surprisingly-Little">3.7 Data Augmentation — Surprisingly Little<a class="anchor-link" href="#3.7-Data-Augmentation-%E2%80%94-Surprisingly-Little">¶</a></h2><p>MAE barely uses augmentation. Table 1e of the paper compares four options [1, Table 1e]:</p>
+<h2 id="3.7-Data-Augmentation:-Surprisingly-Little">3.7 Data Augmentation: Surprisingly Little<a class="anchor-link" href="#3.7-Data-Augmentation:-Surprisingly-Little">¶</a></h2><p>MAE barely uses augmentation. Table 1e of the paper compares four options [1, Table 1e]:</p>
 <ul>
 <li>No augmentation (just a center crop): 84.0% fine-tuning accuracy.</li>
 <li>Fixed-size random crop + horizontal flip: 84.7%.</li>
 <li>Random-sized random crop + horizontal flip: 84.9% (the paper's default).</li>
-<li>Crop + color jitter: 84.3% (slightly worse — color jitter hurts here).</li>
+<li>Crop + color jitter: 84.3% (slightly worse, color jitter hurts here).</li>
 </ul>
-<p>For context, the same ablation on BYOL or SimCLR would show much larger drops without heavy augmentation — on the order of 13 to 28% [1, Sec. 4.1]. MAE's relative insensitivity is a direct consequence of the random mask: augmentation is there to increase the variety of training examples, and the mask already does that.</p>
-<p>In the MWE we use only <code>ToTensor()</code> — no flips, no crops, no color jitter. The result is slightly suboptimal but keeps the example easy to read and run.</p>
+<p>For context, the same ablation on BYOL or SimCLR would show much larger drops without heavy augmentation on the order of 13 to 28% [1, Sec. 4.1]. MAE's relative insensitivity is a direct consequence of the random mask: augmentation is there to increase the variety of training examples, and the mask already does that.</p>
+<p>In the MWE we use only <code>ToTensor()</code>, no flips, no crops, no color jitter. The result is slightly suboptimal but keeps the example easy to read and run.</p>
 </div>
 </div>
 </div>
@@ -8839,14 +8833,14 @@ decoder_pred (patch pixels)        (8, 64, 48)
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [12]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [11]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># ------------------------------------------------------------</span>
 <span class="c1"># Show a few raw CIFAR-10 samples so the reader knows what</span>
 <span class="c1"># the inputs look like before we start reconstructing them.</span>
 <span class="c1"># ------------------------------------------------------------</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">show_images</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">titles</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">show_images</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">titles</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">img</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">images</span><span class="p">[:</span><span class="n">cols</span><span class="p">]):</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
@@ -8880,7 +8874,7 @@ decoder_pred (patch pixels)        (8, 64, 48)
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [13]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [12]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># ------------------------------------------------------------</span>
@@ -8910,7 +8904,7 @@ decoder_pred (patch pixels)        (8, 64, 48)
 <span class="n">total_steps</span>     <span class="o">=</span> <span class="n">EPOCHS</span> <span class="o">*</span> <span class="n">steps_per_epoch</span>
 <span class="n">warmup_steps</span>    <span class="o">=</span> <span class="n">WARMUP_EPOCHS</span> <span class="o">*</span> <span class="n">steps_per_epoch</span>
 
-<span class="k">def</span><span class="w"> </span><span class="nf">lr_lambda</span><span class="p">(</span><span class="n">step</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">lr_lambda</span><span class="p">(</span><span class="n">step</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">step</span> <span class="o">&lt;</span> <span class="n">warmup_steps</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">step</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">warmup_steps</span><span class="p">)</span>
     <span class="n">progress</span> <span class="o">=</span> <span class="p">(</span><span class="n">step</span> <span class="o">-</span> <span class="n">warmup_steps</span><span class="p">)</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">total_steps</span> <span class="o">-</span> <span class="n">warmup_steps</span><span class="p">)</span>
@@ -8965,7 +8959,7 @@ Epoch 5/5 | loss = 0.7582 | lr = 0.00e+00
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [14]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [13]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># ------------------------------------------------------------</span>
@@ -9017,13 +9011,13 @@ Epoch 5/5 | loss = 0.7582 | lr = 0.00e+00
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="3.10-Reconstructions-%E2%80%94-What-the-Model-Has-Actually-Learned">3.10 Reconstructions — What the Model Has Actually Learned<a class="anchor-link" href="#3.10-Reconstructions-%E2%80%94-What-the-Model-Has-Actually-Learned">¶</a></h2><p>A loss curve going down is encouraging, but <em>looking</em> at the reconstructions is what makes the paper feel real. The paper's Figure 2 shows triplets of (masked input, reconstruction, ground truth) and argues that the reconstructions are semantically plausible even when they differ from the ground truth.</p>
+<h2 id="3.10-Reconstructions:-What-the-Model-Has-Actually-Learned">3.10 Reconstructions: What the Model Has Actually Learned<a class="anchor-link" href="#3.10-Reconstructions:-What-the-Model-Has-Actually-Learned">¶</a></h2><p>A loss curve going down is encouraging, but <em>looking</em> at the reconstructions is what makes the paper feel real. The paper's Figure 2 shows triplets of (masked input, reconstruction, ground truth) and argues that the reconstructions are semantically plausible even when they differ from the ground truth.</p>
 <p>Two notes on the visualization convention:</p>
 <ul>
 <li>Following the paper's Figure 2 caption, we keep the <em>visible</em> patches unchanged and only overlay the <em>predicted</em> patches at masked positions. The decoder does produce an output at visible positions, but since the loss never touched them, those outputs are not meaningful and would just look like noise.</li>
 <li>We clamp to <code>[0, 1]</code> before plotting so <code>imshow</code> renders cleanly.</li>
 </ul>
-<p>Our model is tiny and trained for a few epochs on 5 000 images — we are not trying to compete with Figure 2 of the paper, we are trying to show the same mechanism producing some kind of reasonable output.</p>
+<p>Our model is tiny and trained for a few epochs on 5 000 images we are not trying to compete with Figure 2 of the paper, we are trying to show the same mechanism producing some kind of reasonable output.</p>
 </div>
 </div>
 </div>
@@ -9032,7 +9026,7 @@ Epoch 5/5 | loss = 0.7582 | lr = 0.00e+00
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [15]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [14]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># ------------------------------------------------------------</span>
@@ -9041,7 +9035,7 @@ Epoch 5/5 | loss = 0.7582 | lr = 0.00e+00
 <span class="c1"># The reconstruction column uses the paper's Figure 2 convention:</span>
 <span class="c1"># real pixels at visible positions, predicted pixels at masked positions.</span>
 
-<span class="k">def</span><span class="w"> </span><span class="nf">build_reconstruction_triplet</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">pred_patches</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span>
+<span class="k">def</span> <span class="nf">build_reconstruction_triplet</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">pred_patches</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span>
                                  <span class="n">patch_size</span><span class="o">=</span><span class="n">PATCH_SIZE</span><span class="p">):</span>
     <span class="n">original</span> <span class="o">=</span> <span class="n">images</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>
     <span class="n">B</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -9121,8 +9115,8 @@ Epoch 5/5 | loss = 0.7582 | lr = 0.00e+00
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>The reconstructions are blurry, but the important property is that the predicted patches <em>respect</em> the visible ones — colors and low-frequency structure continue across patch boundaries, which means the encoder is using the visible tokens to inform what the masked ones should look like. That is the exact behavior the paper demonstrates at much larger scale in Figure 2 [1, Fig. 2], just at CIFAR-10 resolution with five epochs of training.</p>
-<h3 id="A-Small-Masking-Ratio-Ablation">A Small Masking-Ratio Ablation<a class="anchor-link" href="#A-Small-Masking-Ratio-Ablation">¶</a></h3><p>To close this section with something empirical, we run a miniature version of the paper's Figure 5 ablation: train three short models at 50%, 75%, and 90% masking, and compare final training losses. This is not meant to reproduce the paper's linear-probing accuracy curves — we have no downstream task plugged in — but it does show how dramatically the difficulty of the self-supervised task changes with the ratio.</p>
+<p>The reconstructions are blurry, but the important property is that the predicted patches <em>respect</em> the visible ones, colors and low-frequency structure continue across patch boundaries, which means the encoder is using the visible tokens to inform what the masked ones should look like. That is the exact behavior the paper demonstrates at much larger scale in Figure 2 [1, Fig. 2], just at CIFAR-10 resolution with five epochs of training.</p>
+<h3 id="A-Small-Masking-Ratio-Ablation">A Small Masking-Ratio Ablation<a class="anchor-link" href="#A-Small-Masking-Ratio-Ablation">¶</a></h3><p>To close this section with something empirical, we run a miniature version of the paper's Figure 5 ablation: train three short models at 50%, 75%, and 90% masking, and compare final training losses. This is not meant to reproduce the paper's linear-probing accuracy curves we have no downstream task plugged in but it does show how dramatically the difficulty of the self-supervised task changes with the ratio.</p>
 </div>
 </div>
 </div>
@@ -9131,7 +9125,7 @@ Epoch 5/5 | loss = 0.7582 | lr = 0.00e+00
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [16]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [15]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># ------------------------------------------------------------</span>
@@ -9141,7 +9135,7 @@ Epoch 5/5 | loss = 0.7582 | lr = 0.00e+00
 <span class="c1"># compare final-epoch training losses. This is a qualitative</span>
 <span class="c1"># reproduction of the spirit of [1, Fig. 5], not of its numbers.</span>
 
-<span class="k">def</span><span class="w"> </span><span class="nf">train_one_ratio</span><span class="p">(</span><span class="n">mask_ratio</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">train_one_ratio</span><span class="p">(</span><span class="n">mask_ratio</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
     <span class="n">m</span> <span class="o">=</span> <span class="n">MiniMAE</span><span class="p">(</span><span class="n">mask_ratio</span><span class="o">=</span><span class="n">mask_ratio</span><span class="p">,</span> <span class="n">norm_pix_loss</span><span class="o">=</span><span class="n">NORM_PIX_LOSS</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
     <span class="n">opt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">AdamW</span><span class="p">(</span>
         <span class="n">m</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span>
@@ -9213,7 +9207,7 @@ Epoch 5/5 | loss = 0.7582 | lr = 0.00e+00
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>The training loss naturally grows with the mask ratio: a model asked to predict 90% of the image has a harder problem than one asked to predict 50%. Training loss by itself is not a representation-quality metric (lower loss does <em>not</em> mean better features), but it confirms that the masking ratio meaningfully changes the task the model is solving. The paper's full story — that 75% is the representation-quality sweet spot — requires a downstream classifier to measure, which is beyond the scope of this MWE.</p>
+<p>The training loss naturally grows with the mask ratio: a model asked to predict 90% of the image has a harder problem than one asked to predict 50%. Training loss by itself is not a representation-quality metric (lower loss does <em>not</em> mean better features), but it confirms that the masking ratio meaningfully changes the task the model is solving. The paper's full story that 75% is the representation-quality sweet spot requires a downstream classifier to measure, which is beyond the scope of this MWE.</p>
 </div>
 </div>
 </div>
@@ -9224,8 +9218,8 @@ Epoch 5/5 | loss = 0.7582 | lr = 0.00e+00
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="3.11-Why-Mask-Tokens-Go-in-the-Decoder,-Not-the-Encoder-%E2%80%94-a-Live-Timing-Demo">3.11 Why Mask Tokens Go in the Decoder, Not the Encoder — a Live Timing Demo<a class="anchor-link" href="#3.11-Why-Mask-Tokens-Go-in-the-Decoder,-Not-the-Encoder-%E2%80%94-a-Live-Timing-Demo">¶</a></h2><p>The last thing worth demonstrating is the efficiency claim at the heart of MAE's asymmetric design. Table 1c and Table 2 of the paper report that feeding mask tokens through the encoder (instead of leaving them to the decoder) costs 3.3× more FLOPs and 2.8–4.1× more wall-clock time [1, Table 1c, Table 2]. That is the primary reason MAE can afford to train such big encoders.</p>
-<p>We cannot reproduce the accuracy numbers on CIFAR-10 in a few epochs, but the efficiency effect is a pure computational phenomenon — it should show up on any machine. We build a symmetric variant of our MiniMAE in which the encoder processes all 64 tokens (masked positions filled with a learned mask token) and time a forward pass against our asymmetric version.</p>
+<h2 id="3.11-Why-Mask-Tokens-Go-in-the-Decoder,-Not-the-Encoder:-a-Live-Timing-Demo">3.11 Why Mask Tokens Go in the Decoder, Not the Encoder: a Live Timing Demo<a class="anchor-link" href="#3.11-Why-Mask-Tokens-Go-in-the-Decoder,-Not-the-Encoder:-a-Live-Timing-Demo">¶</a></h2><p>The last thing worth demonstrating is the efficiency claim at the heart of MAE's asymmetric design. Table 1c and Table 2 of the paper report that feeding mask tokens through the encoder (instead of leaving them to the decoder) costs 3.3× more FLOPs and 2.8–4.1× more wall-clock time [1, Table 1c, Table 2]. That is the primary reason MAE can afford to train such big encoders.</p>
+<p>We cannot reproduce the accuracy numbers on CIFAR-10 in a few epochs, but the efficiency effect is a pure computational phenomenon it should show up on any machine. We build a symmetric variant of our MiniMAE in which the encoder processes all 64 tokens (masked positions filled with a learned mask token) and time a forward pass against our asymmetric version.</p>
 </div>
 </div>
 </div>
@@ -9234,7 +9228,7 @@ Epoch 5/5 | loss = 0.7582 | lr = 0.00e+00
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [17]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [16]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># ------------------------------------------------------------</span>
@@ -9244,8 +9238,8 @@ Epoch 5/5 | loss = 0.7582 | lr = 0.00e+00
 <span class="c1"># with masked positions replaced by a learned mask token. This is</span>
 <span class="c1"># the "encoder w/ [M]" row in Table 1c of [1].</span>
 
-<span class="k">class</span><span class="w"> </span><span class="nc">MiniMAE_Symmetric</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">MiniMAE_Symmetric</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">patch_embed</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">PATCH_DIM</span><span class="p">,</span> <span class="n">EMBED_DIM</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pos_embed</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span>
@@ -9268,7 +9262,7 @@ Epoch 5/5 | loss = 0.7582 | lr = 0.00e+00
         <span class="bp">self</span><span class="o">.</span><span class="n">decoder_norm</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">LayerNorm</span><span class="p">(</span><span class="n">DECODER_EMBED_DIM</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">decoder_pred</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">DECODER_EMBED_DIM</span><span class="p">,</span> <span class="n">PATCH_DIM</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="p">):</span>
         <span class="n">patches</span> <span class="o">=</span> <span class="n">patchify</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
         <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">patch_embed</span><span class="p">(</span><span class="n">patches</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos_embed</span>  <span class="c1"># [B, 64, 128]</span>
 
@@ -9294,7 +9288,7 @@ Epoch 5/5 | loss = 0.7582 | lr = 0.00e+00
         <span class="k">return</span> <span class="n">loss</span><span class="p">,</span> <span class="n">pred</span><span class="p">,</span> <span class="n">mask</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">time_forward</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">n_iters</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">BATCH_SIZE</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">time_forward</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">n_iters</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">BATCH_SIZE</span><span class="p">):</span>
     <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
     <span class="n">dummy</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">IN_CHANNELS</span><span class="p">,</span> <span class="n">IMAGE_SIZE</span><span class="p">,</span> <span class="n">IMAGE_SIZE</span><span class="p">)</span>
     <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
@@ -9307,7 +9301,7 @@ Epoch 5/5 | loss = 0.7582 | lr = 0.00e+00
     <span class="k">return</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">/</span> <span class="n">n_iters</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">count_params</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">count_params</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
     <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
 
 
@@ -9340,9 +9334,9 @@ Epoch 5/5 | loss = 0.7582 | lr = 0.00e+00
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Asymmetric (encoder sees 16 visible tokens):  658,416 params |  21.69 ms / forward
-Symmetric  (encoder sees all 64 w/ mask tk):  658,448 params |  31.29 ms / forward
-Speedup from keeping mask tokens out of the encoder: 1.44×
+<pre>Asymmetric (encoder sees 16 visible tokens):  658,416 params |  19.91 ms / forward
+Symmetric  (encoder sees all 64 w/ mask tk):  658,448 params |  31.94 ms / forward
+Speedup from keeping mask tokens out of the encoder: 1.60×
 
 Table 2 of [1] reports 2.8× to 4.1× wall-clock speedup on TPU for
 ViT-L and ViT-H. On CPU at this tiny scale the speedup is smaller
@@ -9360,7 +9354,7 @@ but the direction is the same: shorter encoder sequence = faster model.
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>The measured speedup on a laptop CPU is modest because at this scale Python and PyTorch overhead dominate, but the direction is unambiguous and matches the paper. At ImageNet scale with ViT-Large and ViT-Huge encoders, the same computational asymmetry produces the 2.8–4.1× wall-clock speedups reported in Table 2 [1, Table 2]. That speedup is the reason MAE can afford to train enormous encoders for 1600 epochs on hardware that would otherwise melt — and in turn it is why MAE's accuracy curves keep climbing where contrastive methods saturate.</p>
+<p>The measured speedup on a laptop CPU is modest because at this scale Python and PyTorch overhead dominate, but the direction is unambiguous and matches the paper. At ImageNet scale with ViT-Large and ViT-Huge encoders, the same computational asymmetry produces the 2.8–4.1× wall-clock speedups reported in Table 2 [1, Table 2]. That speedup is the reason MAE can afford to train enormous encoders for 1600 epochs on hardware that would otherwise melt and in turn it is why MAE's accuracy curves keep climbing where contrastive methods saturate.</p>
 </div>
 </div>
 </div>
@@ -9392,7 +9386,7 @@ but the direction is the same: shorter encoder sequence = faster model.
 <li>Accuracy improves steadily up to 1600 epochs, whereas contrastive methods like MoCo v3 often saturate by 300 epochs[1, sec. 4].</li>
 <li>While the asymmetric design speeds up training by 3x-4x per epoch in Section 3, the total wall-clock time remains significant due to the non-saturating nature of the pretext task[1, sec. 4].</li>
 </ul>
-<h2 id="4.3-Future-Directions:-Multi-modal-Scaling">4.3 Future Directions: Multi-modal Scaling<a class="anchor-link" href="#4.3-Future-Directions:-Multi-modal-Scaling">¶</a></h2><p>The simplicity of the MAE "mask-and-reconstruct" logic has allowed researchers to extend the paradigm into various other data modalities.</p>
+<h2 id="4.2-Future-Directions:-Multi-modal-Scaling">4.2 Future Directions: Multi-modal Scaling<a class="anchor-link" href="#4.2-Future-Directions:-Multi-modal-Scaling">¶</a></h2><p>The simplicity of the MAE "mask-and-reconstruct" logic has allowed researchers to extend the paradigm into various other data modalities.</p>
 <h3 id="Video-(VideoMAE)">Video (VideoMAE)<a class="anchor-link" href="#Video-(VideoMAE)">¶</a></h3><p>The spatial redundancy in images is even more pronounced in video (temporal redundancy). VideoMAE [10] extends the framework by masking up to <strong>90% or more</strong> of video tubes to force the model to learn motion and temporal dynamics.</p>
 <h3 id="Audio-(AudioMAE)">Audio (AudioMAE)<a class="anchor-link" href="#Audio-(AudioMAE)">¶</a></h3><p>In audio processing, spectrograms can be treated as 2D images. AudioMAE [11] masks patches of the spectrogram, allowing the model to learn representations for sound classification and speech recognition without human-labeled data.</p>
 <h3 id="3D-Point-Clouds">3D Point Clouds<a class="anchor-link" href="#3D-Point-Clouds">¶</a></h3><p>Recent research[12][13] has successfully applied MAE to irregular 3D data:</p>
@@ -9400,7 +9394,19 @@ but the direction is the same: shorter encoder sequence = faster model.
 <li><strong>Point-MAE:</strong> Directly reconstructs masked 3D coordinates in point clouds.</li>
 <li><strong>Joint-MAE:</strong> A multi-modal framework that cross-references 2D depth maps and 3D point clouds to ensure geometric and semantic consistency.</li>
 </ul>
+<h3 id="Diffusion-and-Generative-Extensions">Diffusion and Generative Extensions<a class="anchor-link" href="#Diffusion-and-Generative-Extensions">¶</a></h3><p>A recent line of work blends the masked-and-reconstruct idea with diffusion models. MaskGIT and Muse use masked token prediction in a generative setting, and Diffusion-MAE style methods replace the simple MSE objective with a denoising diffusion target on masked patches. The motivation is to keep MAE's efficiency from the high masking ratio while letting the decoder model a richer distribution over possible completions, which can address the blurry-reconstruction limitation discussed in Section 4.1.</p>
+<h3 id="Cross-modal-Pretraining">Cross-modal Pretraining<a class="anchor-link" href="#Cross-modal-Pretraining">¶</a></h3><p>Beyond single-modality extensions, follow-up work has used the masking objective for cross-modal pretraining. Examples include masking patches in one modality (image) and reconstructing them with help from another modality (text caption, depth map, or audio track). This direction treats MAE less as a vision-specific recipe and more as a general scaffold for self-supervised learning across modalities, which is how BERT-style pretraining grew in NLP.</p>
+<h2 id="4.3-Open-Questions-and-Assumptions">4.3 Open Questions and Assumptions<a class="anchor-link" href="#4.3-Open-Questions-and-Assumptions">¶</a></h2><p>A few assumptions baked into MAE are worth naming, since they point to where the next round of progress is likely to come from.</p>
+<h3 id="The-Masking-Assumption">The Masking Assumption<a class="anchor-link" href="#The-Masking-Assumption">¶</a></h3><p>MAE assumes that uniform random masking at the patch level is the right pretext task. This works well for natural images because of spatial redundancy, but it is not obvious that it is optimal. The paper's own ablation (Table 1f) shows that block-wise and grid-wise sampling produce noticeably different feature quality, and recent work has proposed adaptive or content-aware masking schemes that hide harder regions of the image. The right masking strategy may depend on the data domain in ways the paper does not fully explore.</p>
+<h3 id="The-Pixel-Target-Assumption">The Pixel-Target Assumption<a class="anchor-link" href="#The-Pixel-Target-Assumption">¶</a></h3><p>MAE reconstructs pixels because it sidesteps the need for a separate tokenizer like the one used in BEiT. This is a practical win, but it also caps how semantic the pretext task can be. As discussed in Section 4.1, pixels are recorded light, not meaning. Methods that target richer signals (features from a frozen teacher network, CLIP embeddings, depth maps) can produce more semantic representations at the cost of extra machinery. Whether the pixel target is a feature or a limitation depends on the downstream task.</p>
+<h3 id="The-Compute-Assumption">The Compute Assumption<a class="anchor-link" href="#The-Compute-Assumption">¶</a></h3><p>The asymmetric design gives a 3x to 4x speedup per epoch, which is the headline efficiency result. But MAE's accuracy keeps improving up to 1600 epochs, while contrastive methods like MoCo v3 saturate around 300. The total wall-clock cost to reach peak accuracy is therefore still very high, and is dominated by the long schedule rather than the per-epoch cost. Reducing this total compute, either through better schedules, better targets, or better initialization, is an open problem.</p>
+<h3 id="The-Architecture-Assumption">The Architecture Assumption<a class="anchor-link" href="#The-Architecture-Assumption">¶</a></h3><p>MAE inherits the Vision Transformer as its backbone. The masking trick depends on the patch-as-token view that ViT provides, so applying the same idea to a convolutional or hybrid backbone is not straightforward. Recent work on ConvNeXt-V2 has shown that masked image modeling can be adapted to convolutional networks with sparse convolutions, but it requires architectural changes that the original MAE recipe does not need. How portable the recipe is across backbones is still being worked out.</p>
 <h2 id="Conclusion">Conclusion<a class="anchor-link" href="#Conclusion">¶</a></h2><p>Masked Autoencoders represent a fundamental shift toward simple, scalable self-supervised learners in computer vision, mirroring the success of BERT in NLP. While the framework requires intensive training and produces representations that are less linearly separable than contrastive alternatives, its ability to scale to massive Vision Transformers and generalize to non-image modalities establishes it as a cornerstone for future generative AI research.</p>
+<hr/>
+<h2 id="Group-Member-Contributions">Group Member Contributions<a class="anchor-link" href="#Group-Member-Contributions">¶</a></h2><p>This project was completed by a group of three members. The contributions are described below in anonymized form.</p>
+<p><strong>Member 1: Model Architecture, Minimal CPU-Ready Working Example, and Final Integration.</strong> This member built the miniaturized MAE model from scratch, including the tiny ViT encoder, the lightweight decoder, and the random masking logic using the shuffle and unshuffle trick from the paper. They wrote the part-by-part code for patchification, the transformer block, positional embeddings, and the full MiniMAE class that ties everything together. Every block of code was annotated in the style of "The Annotated Transformer," with prose that explains why each design choice was made and how it maps back to the paper. For the MWE-CPU section, this member set up the CIFAR-10 training pipeline, ran the small training loop on a laptop CPU, produced the loss curve, and generated the reconstruction visualizations. They also ran the small masking-ratio ablation across 50%, 75%, and 90% to mirror the spirit of Figure 5 in the paper, and ran the timing demo that compares the asymmetric encoder with a symmetric variant. Finally, this member did the integration pass at the end so that the writing, code, and figures across all sections flow together as one cohesive document.</p>
+<p><strong>Member 2: Background and Training Loop.</strong> This member wrote Part 1 of the project, which covers the motivation behind MAE and the three core reasons that masked image modeling in vision had lagged behind BERT in NLP: the architecture gap that was closed by the Vision Transformer, the difference in information density between text and images, and the different role the decoder plays when the target is pixels instead of words. They also wrote the section that explains why a 75% masking ratio works for images even though BERT only uses 15% for text. For Part 3, this member explained the full training loop and its sub-parts, including the pretraining objective, the MSE loss computed only on masked patches, the choice between raw and per-patch-normalized pixel targets, the AdamW optimizer with decoupled weight decay, the linear warmup followed by cosine decay learning rate schedule, the discussion of weight decay and stochastic depth as regularizers, the role of random masking as a built-in form of regularization, and the finding that MAE needs almost no data augmentation.</p>
+<p><strong>Member 3: Discussion, Diagrams, and Formatting.</strong> This member wrote Part 4, the limitations and future directions section. This includes the discussion of why MAE representations are less linearly separable than contrastive methods like MoCo v3, the semantic shallowness that comes from reconstructing raw pixels instead of tokens, and the very long training schedules that MAE needs to reach peak accuracy. They also wrote the future directions sub-section that covers how the mask-and-reconstruct paradigm has been extended to video with VideoMAE, to audio spectrograms with AudioMAE, to 3D point clouds with Point-MAE and Joint-MAE, and to generative modeling through diffusion and cross-modal extensions. This member also produced all of the figures and diagrams in the document, including the side-by-side text-vs-image masking illustration in Part 1 and the full pipeline diagram in Section 2.2. They handled the overall PDF formatting, the layout of the code cells and their outputs, and the visual polish of the final document.</p>
 <hr/>
 <h2 id="References">References<a class="anchor-link" href="#References">¶</a></h2><p>The numbered citations used throughout this notebook refer to the entries below.</p>
 <p><strong>[1]</strong> He, K., Chen, X., Xie, S., Li, Y., Dollár, P., and Girshick, R. (2022). <em>Masked Autoencoders Are Scalable Vision Learners.</em> Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), pp. 16000–16009. The primary paper being annotated.</p>
